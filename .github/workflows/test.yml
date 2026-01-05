@@ -55,7 +55,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       tests: ${{ steps.tests.outputs.tests }}
-      min_version: ${{ steps.version.outputs.min_version }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -80,9 +79,6 @@ jobs:
       fail-fast: false
       matrix:
         test: ${{ fromJSON(needs.gather_tests.outputs.tests) }}
-        version:
-          - ${{ needs.gather_tests.outputs.min_version }}
-          - latest
     defaults:
       run:
         working-directory: ${{ needs.role_name.outputs.role_name }}
