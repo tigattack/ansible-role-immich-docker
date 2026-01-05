@@ -1,6 +1,6 @@
 ---
 
-- name: Check if volume would change
+- name: "Check if volume would change: {{ volume_item.config.name }}"
   community.docker.docker_volume:
     name: "{{ volume_item.config.name }}"
     driver: "{{ volume_item.config.driver }}"
@@ -14,20 +14,20 @@
 - name: Change volume
   when: volume_check is changed # noqa no-handler
   block:
-    - name: Get container info
+    - name: "Get container info: {{ volume_item.container_name }}"
       community.docker.docker_container_info:
         name: "{{ volume_item.container_name }}"
       register: container_info
 
-    - name: Stop container
+    - name: "Remove container: {{ volume_item.container_name }}"
       community.docker.docker_container:
         name: "{{ volume_item.container_name }}"
-        state: stopped
+        state: absent
         comparisons:
           '*': ignore
       when: container_info.exists
 
-    - name: Ensure volume
+    - name: "Ensure volume: {{ volume_item.config.name }}"
       community.docker.docker_volume:
         name: "{{ volume_item.config.name }}"
         driver: "{{ volume_item.config.driver }}"
