@@ -20,8 +20,8 @@ platforms:
 
 ansible:
   playbooks:
-    prepare: ../resources/prepare.yml
-    converge: converge.yml
+    prepare: prepare.yml
+    converge: ../resources/converge.yml
   cfg:
     defaults:
       callbacks_enabled: profile_tasks
@@ -29,6 +29,11 @@ ansible:
 
 provisioner:
   name: ansible
+  inventory:
+    group_vars:
+      all:
+        immich_docker_storage_use_docker_volume: true
+        immich_docker_model_cache_use_docker_volume: true
 
 scenario:
   test_sequence:

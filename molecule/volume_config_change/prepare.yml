@@ -1,11 +1,5 @@
 ---
-
-- name: Converge - Deploy with bind mount
-  hosts: all
-  roles:
-    - role: tigattack.immich_docker
-
-- name: Converge - Re-deploy with docker volume
+- name: Prepare
   hosts: all
   vars:
     immich_docker_storage_use_docker_volume: true

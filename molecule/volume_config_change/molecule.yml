@@ -20,7 +20,7 @@ platforms:
 
 ansible:
   playbooks:
-    prepare: ../resources/prepare.yml
+    prepare: prepare.yml
     converge: converge.yml
   cfg:
     defaults:
