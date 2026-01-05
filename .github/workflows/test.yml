@@ -119,6 +119,10 @@ jobs:
       run:
         working-directory: ${{ needs.role_name.outputs.role_name }}
     steps:
+      - uses: actions/checkout@v6
+        with:
+          path: ${{ needs.role_name.outputs.role_name }}
+
       - name: Download image artefact
         uses: actions/download-artifact@v7
         with:
@@ -126,10 +130,6 @@ jobs:
 
       - name: Load Docker image
         run: docker load -i test-image.tar
-
-      - uses: actions/checkout@v6
-        with:
-          path: ${{ needs.role_name.outputs.role_name }}
 
       - uses: actions/cache@v4
         with:
