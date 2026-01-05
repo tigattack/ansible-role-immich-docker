@@ -101,6 +101,8 @@ immich_docker_server_container:
   name: "{{ immich_docker_server_container_name }}"
   image: ghcr.io/immich-app/immich-server:{{ immich_docker_version }}
   restart_policy: unless-stopped
+  labels:
+    deployment_name: immich
   networks: >-
     {{
       [{'name': immich_docker_container_network}]
@@ -144,6 +146,8 @@ immich_docker_machine_learning_container:
   name: "{{ immich_docker_machine_learning_container_name }}"
   image: "ghcr.io/immich-app/immich-machine-learning:{{ immich_docker_machine_learning_image_tag | trim }}"
   restart_policy: unless-stopped
+  labels:
+    deployment_name: immich
   networks: >-
     {{
       [{'name': immich_docker_container_network}]
@@ -161,6 +165,8 @@ immich_docker_postgres_container:
   name: "{{ immich_docker_postgres_container_name }}"
   image: "{{ immich_docker_postgres_image }}"
   restart_policy: unless-stopped
+  labels:
+    deployment_name: immich
   shm_size: 128MB
   networks: >-
     {{
@@ -186,6 +192,8 @@ immich_docker_redis_container:
   name: "{{ immich_docker_redis_container_name }}"
   image: "{{ immich_docker_redis_image }}"
   restart_policy: unless-stopped
+  labels:
+    deployment_name: immich
   networks: >-
     {{
       [{'name': immich_docker_container_network}]
