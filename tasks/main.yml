@@ -5,8 +5,12 @@
     that: immich_docker_container_network != 'bridge'
     fail_msg: The default Docker network 'bridge' cannot be used for Immich.
 
-- name: Include Docker volumes
-  ansible.builtin.import_tasks: docker_volumes.yml
+- name: Manage Immich Docker volumes
+  ansible.builtin.include_tasks: manage_volume.yml
+  loop: "{{ immich_docker_volumes_to_manage }}"
+  loop_control:
+    loop_var: volume_item
+  when: volume_item.when
 
 - name: Create Immich Docker network
   community.docker.docker_network:

@@ -17,6 +17,11 @@ immich_docker_dirs:
     owner: root
     group: root
     mode: '0755'
+  model_cache:
+    path: "{{ immich_docker_model_cache_bind_path }}"
+    owner: 'root'
+    group: 'root'
+    mode: '0755'
   db_data:
     path: "{{ immich_docker_db_data_bind_path }}"
     owner: '999'
@@ -25,16 +30,45 @@ immich_docker_dirs:
 
 immich_docker_dirs_to_create: >-
   {{
-    [immich_docker_dirs.data] +
+    (
+      [immich_docker_dirs.data] if not immich_docker_data_use_docker_volume
+      else []
+    ) +
     (
       [immich_docker_dirs.storage] if not immich_docker_storage_use_docker_volume
       else []
     ) +
     (
-      [immich_docker_dirs.db_data] if immich_docker_deploy_postgres
+      [immich_docker_dirs.model_cache] if not immich_docker_model_cache_use_docker_volume
+      else []
+    ) +
+    (
+      [immich_docker_dirs.db_data] if (immich_docker_deploy_postgres and not immich_docker_db_data_use_docker_volume)
       else []
     )
   }}
+
+immich_docker_volumes_to_manage:
+  - description: Immich data Docker volume
+    container_description: Immich server container
+    config: "{{ immich_docker_data_volume }}"
+    container_name: "{{ immich_docker_server_container_name }}"
+    when: "{{ immich_docker_data_use_docker_volume }}"
+  - description: Immich storage Docker volume
+    container_description: Immich server container
+    config: "{{ immich_docker_storage_volume }}"
+    container_name: "{{ immich_docker_server_container_name }}"
+    when: "{{ immich_docker_storage_use_docker_volume }}"
+  - description: Immich model cache Docker volume
+    container_description: Immich machine learning container
+    config: "{{ immich_docker_model_cache_volume }}"
+    container_name: "{{ immich_docker_machine_learning_container_name }}"
+    when: "{{ immich_docker_model_cache_use_docker_volume }}"
+  - description: PostgreSQL data Docker volume
+    container_description: PostgreSQL container
+    config: "{{ immich_docker_db_data_volume }}"
+    container_name: "{{ immich_docker_postgres_container_name }}"
+    when: "{{ immich_docker_db_data_use_docker_volume and immich_docker_deploy_postgres }}"
 
 immich_docker_server_env: |
   {{
@@ -54,6 +88,9 @@ immich_docker_container_mounts_base:
     read_only: true
     source: /etc/localtime
     target: /etc/localtime
+  - type: "{{ 'volume' if immich_docker_data_use_docker_volume else 'bind' }}"
+    target: /usr/src/app/upload
+    source: "{{ immich_docker_data_volume.name if immich_docker_data_use_docker_volume else immich_docker_data_bind_path }}"
   - type: "{{ 'volume' if immich_docker_storage_use_docker_volume else 'bind' }}"
     target: /data
     source: "{{ immich_docker_storage_volume.name if immich_docker_storage_use_docker_volume else immich_docker_storage_bind_path }}"
@@ -151,12 +188,10 @@ immich_docker_postgres_container:
     POSTGRES_USER: "{{ immich_docker_db_username }}"
     POSTGRES_DB: "{{ immich_docker_db_database_name }}"
     POSTGRES_INITDB_ARGS: '--data-checksums'
-  # healthcheck:
-  #   test: pg_isready --dbname="{{ immich_docker_db_database_name }}" --username="{{ immich_docker_db_username }}" || exit 1
   mounts:
-    - type: bind
+    - type: "{{ 'volume' if immich_docker_db_data_use_docker_volume else 'bind' }}"
       target: /var/lib/postgresql/data
-      source: "{{ immich_docker_db_data_bind_path }}"
+      source: "{{ immich_docker_db_data_volume.name if immich_docker_db_data_use_docker_volume else immich_docker_db_data_bind_path }}"
   state: "{{ immich_docker_containers_state }}"
 
 immich_docker_containers: >-
