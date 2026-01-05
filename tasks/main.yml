@@ -9,6 +9,7 @@
   ansible.builtin.include_tasks: manage_volume.yml
   loop: "{{ immich_docker_volumes_to_manage }}"
   loop_control:
+    label: "{{ volume_item.description }}: {{ volume_item.config.name }}"
     loop_var: volume_item
   when: volume_item.when
 

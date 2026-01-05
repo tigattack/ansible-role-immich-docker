@@ -38,22 +38,22 @@ immich_docker_dirs:
 
 # List of Docker volumes to manage, each conditionally managed based on the user's storage configuration
 immich_docker_volumes_to_manage:
-  - description: Immich data Docker volume
+  - description: Immich data volume
     container_description: Immich server container
     config: "{{ immich_docker_data_volume }}"
     container_name: "{{ immich_docker_server_container_name }}"
     when: "{{ immich_docker_data_use_docker_volume }}"
-  - description: Immich storage Docker volume
+  - description: Immich storage volume
     container_description: Immich server container
     config: "{{ immich_docker_storage_volume }}"
     container_name: "{{ immich_docker_server_container_name }}"
     when: "{{ immich_docker_storage_use_docker_volume }}"
-  - description: Immich model cache Docker volume
+  - description: Immich model cache volume
     container_description: Immich machine learning container
     config: "{{ immich_docker_model_cache_volume }}"
     container_name: "{{ immich_docker_machine_learning_container_name }}"
     when: "{{ immich_docker_model_cache_use_docker_volume }}"
-  - description: PostgreSQL data Docker volume
+  - description: PostgreSQL data volume
     container_description: PostgreSQL container
     config: "{{ immich_docker_db_data_volume }}"
     container_name: "{{ immich_docker_postgres_container_name }}"
