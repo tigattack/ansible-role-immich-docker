@@ -1,53 +1,42 @@
 ---
 
+# region Global Settings
+
 immich_docker_server_container_name: "{{ immich_docker_container_base_name }}_server"
 immich_docker_machine_learning_container_name: "{{ immich_docker_container_base_name }}_machine_learning"
 immich_docker_redis_container_name: "{{ immich_docker_container_base_name }}_redis"
 immich_docker_postgres_container_name: "{{ immich_docker_container_base_name }}_postgres"
 
-# Directories that must exist on the host for bind mounts
+# region Storage
+
+# List of directories that must exist on the host for bind mounts, each conditionally created based on the user's storage configuration
 immich_docker_dirs:
-  data:
+  - description: Immich data directory
     path: "{{ immich_docker_data_bind_path }}"
     owner: root
     group: root
     mode: '0755'
-  storage:
+    when: "{{ not immich_docker_data_use_docker_volume }}"
+  - description: Immich storage directory
     path: "{{ immich_docker_storage_bind_path }}"
     owner: root
     group: root
     mode: '0755'
-  model_cache:
+    when: "{{ not immich_docker_storage_use_docker_volume }}"
+  - description: Immich ML model cache directory
     path: "{{ immich_docker_model_cache_bind_path }}"
-    owner: 'root'
-    group: 'root'
+    owner: root
+    group: root
     mode: '0755'
-  db_data:
+    when: "{{ not immich_docker_model_cache_use_docker_volume }}"
+  - description: Immich PostgreSQL data directory
     path: "{{ immich_docker_db_data_bind_path }}"
     owner: '999'
     group: '999'
     mode: '0700'
+    when: "{{ immich_docker_deploy_postgres and not immich_docker_db_data_use_docker_volume }}"
 
-immich_docker_dirs_to_create: >-
-  {{
-    (
-      [immich_docker_dirs.data] if not immich_docker_data_use_docker_volume
-      else []
-    ) +
-    (
-      [immich_docker_dirs.storage] if not immich_docker_storage_use_docker_volume
-      else []
-    ) +
-    (
-      [immich_docker_dirs.model_cache] if not immich_docker_model_cache_use_docker_volume
-      else []
-    ) +
-    (
-      [immich_docker_dirs.db_data] if (immich_docker_deploy_postgres and not immich_docker_db_data_use_docker_volume)
-      else []
-    )
-  }}
-
+# List of Docker volumes to manage, each conditionally managed based on the user's storage configuration
 immich_docker_volumes_to_manage:
   - description: Immich data Docker volume
     container_description: Immich server container
@@ -70,6 +59,9 @@ immich_docker_volumes_to_manage:
     container_name: "{{ immich_docker_postgres_container_name }}"
     when: "{{ immich_docker_db_data_use_docker_volume and immich_docker_deploy_postgres }}"
 
+# region Core application
+
+# Server container environment variables
 immich_docker_server_env: |
   {{
     {
@@ -83,6 +75,7 @@ immich_docker_server_env: |
     } | combine(immich_docker_env_vars)
   }}
 
+# Server container mounts
 immich_docker_container_mounts_base:
   - type: bind
     read_only: true
@@ -103,19 +96,7 @@ immich_docker_container_mounts: >-
     immich_docker_container_mounts_base
   }}
 
-immich_docker_machine_learning_mounts_base:
-  - type: "{{ 'volume' if immich_docker_model_cache_use_docker_volume else 'bind' }}"
-    target: /cache
-    source: "{{ immich_docker_model_cache_volume.name if immich_docker_model_cache_use_docker_volume else immich_docker_model_cache_bind_path }}"
-
-immich_docker_machine_learning_mounts: >-
-  {{
-    immich_docker_machine_learning_mounts_base + (
-      immich_docker_machine_learning_extra_volumes
-      if immich_docker_machine_learning_extra_volumes | length > 0 else []
-    )
-  }}
-
+# Server container definition
 immich_docker_server_container:
   name: "{{ immich_docker_server_container_name }}"
   image: ghcr.io/immich-app/immich-server:{{ immich_docker_version }}
@@ -131,6 +112,23 @@ immich_docker_server_container:
   env: "{{ immich_docker_server_env }}"
   state: "{{ immich_docker_containers_state }}"
 
+# region Machine learning
+
+# Machine learning container mounts
+immich_docker_machine_learning_mounts_base:
+  - type: "{{ 'volume' if immich_docker_model_cache_use_docker_volume else 'bind' }}"
+    target: /cache
+    source: "{{ immich_docker_model_cache_volume.name if immich_docker_model_cache_use_docker_volume else immich_docker_model_cache_bind_path }}"
+
+immich_docker_machine_learning_mounts: >-
+  {{
+    immich_docker_machine_learning_mounts_base + (
+      immich_docker_machine_learning_extra_volumes
+      if immich_docker_machine_learning_extra_volumes | length > 0 else []
+    )
+  }}
+
+# Machine learning container image tag
 immich_docker_machine_learning_image_tag: >-
   {{
     immich_docker_machine_learning_version ~
@@ -141,6 +139,7 @@ immich_docker_machine_learning_image_tag: >-
     )
   }}
 
+# Machine learning container definition
 immich_docker_machine_learning_container:
   name: "{{ immich_docker_machine_learning_container_name }}"
   image: "ghcr.io/immich-app/immich-machine-learning:{{ immich_docker_machine_learning_image_tag | trim }}"
@@ -155,23 +154,9 @@ immich_docker_machine_learning_container:
   env: "{{ immich_docker_machine_learning_env_vars }}"
   state: "{{ immich_docker_containers_state }}"
 
+# region PostgreSQL
 
-immich_docker_redis_container:
-  name: "{{ immich_docker_redis_container_name }}"
-  image: "{{ immich_docker_redis_image }}"
-  restart_policy: unless-stopped
-  networks: >-
-    {{
-      [{'name': immich_docker_container_network}]
-      if immich_docker_container_network | string | length > 0
-      else omit
-    }}
-  healthcheck:
-    test: redis-cli ping || exit 1
-    start_period: 5s
-  state: "{{ immich_docker_containers_state }}"
-
-
+# PostgreSQL container definition
 immich_docker_postgres_container:
   name: "{{ immich_docker_postgres_container_name }}"
   image: "{{ immich_docker_postgres_image }}"
@@ -194,6 +179,27 @@ immich_docker_postgres_container:
       source: "{{ immich_docker_db_data_volume.name if immich_docker_db_data_use_docker_volume else immich_docker_db_data_bind_path }}"
   state: "{{ immich_docker_containers_state }}"
 
+# region Redis
+
+# Redis container definition
+immich_docker_redis_container:
+  name: "{{ immich_docker_redis_container_name }}"
+  image: "{{ immich_docker_redis_image }}"
+  restart_policy: unless-stopped
+  networks: >-
+    {{
+      [{'name': immich_docker_container_network}]
+      if immich_docker_container_network | string | length > 0
+      else omit
+    }}
+  healthcheck:
+    test: redis-cli ping || exit 1
+    start_period: 5s
+  state: "{{ immich_docker_containers_state }}"
+
+# region Container orchestration
+
+# All containers to deploy
 immich_docker_containers: >-
   {{
     (

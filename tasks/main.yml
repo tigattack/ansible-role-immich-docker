@@ -25,9 +25,10 @@
     mode: "{{ item.mode }}"
     state: directory
   become: true
-  loop: "{{ immich_docker_dirs_to_create }}"
+  loop: "{{ immich_docker_dirs }}"
   loop_control:
-    label: "{{ item.path }}"
+    label: "{{ item.description }}: {{ item.path }}"
+  when: item.when
 
 - name: Deploy Immich containers # noqa args[module]
   community.docker.docker_container: "{{ item }}"
