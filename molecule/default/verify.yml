@@ -23,14 +23,14 @@
 
     - name: Verify Immich responds to API request
       ansible.builtin.uri:
-        url: http://{{ immich_container_ip }}:2283/api/server-info/ping
+        url: http://{{ immich_container_ip }}:2283/api/server/ping
         return_content: true
       failed_when: false
       register: immich_api_response
 
     - name: Assert Immich responds to API request
       ansible.builtin.assert:
-        that: immich_api_response.status == 200
-        success_msg: >-
-          Immich API 'ping' endpoint query succeeded with response:
-          {{ immich_api_response.content }}
+        that:
+          - immich_api_response.status == 200
+          - immich_api_response.json.res == 'pong'
+        success_msg: Immich API ping succeeded
