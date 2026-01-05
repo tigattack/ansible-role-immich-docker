@@ -83,10 +83,13 @@ jobs:
           cat > Dockerfile << 'EOF'
           FROM geerlingguy/docker-debian13-ansible:latest
           RUN wget -qO get-docker.sh https://get.docker.com &&\
-              sh get-docker.sh &&\
+              sh get-docker.sh --no-autostart &&\
               rm get-docker.sh &&\
+              apt-get purge -y docker-compose-plugin docker-ce-rootless-extras &&\
+              apt-get autoremove -y &&\
               rm -rf /var/lib/apt/lists/* &&\
-              apt-get clean
+              apt-get clean &&\
+              echo '{"storage-driver": "overlay2"}' > /etc/docker/daemon.json
           RUN find /usr/lib/python3* -name EXTERNALLY-MANAGED -exec rm -v {} + &&\
               pip3 --no-cache-dir install docker
           EOF
