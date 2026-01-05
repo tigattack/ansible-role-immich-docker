@@ -2,7 +2,6 @@
 dependency:
   name: galaxy
   options:
-    role-file: molecule/resources/requirements.yml
     requirements-file: requirements.yml
 
 driver:
@@ -10,7 +9,7 @@ driver:
 
 platforms:
   - name: instance
-    image: "geerlingguy/docker-${MOLECULE_DISTRO:-debian13}-ansible:latest"
+    image: "ghcr.io/tigattack/docker-debian13-ansible-dind:latest"
     command: ${MOLECULE_DOCKER_COMMAND:-""}
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:rw

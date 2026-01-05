@@ -18,17 +18,3 @@
       ansible.builtin.apt:
         update_cache: true
       when: ansible_facts.pkg_mgr == 'apt'
-
-  roles:
-    - role: geerlingguy.pip
-      vars:
-        pip_install_packages:
-          - name: docker
-
-    - role: geerlingguy.docker
-      vars:
-        docker_install_compose_plugin: false
-        # Without this, Docker falls back to VFS.
-        # VFS uses more space and can cause GHA runners to run out of space.
-        docker_daemon_options:
-          storage-driver: overlay2

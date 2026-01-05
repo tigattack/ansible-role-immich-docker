@@ -94,10 +94,7 @@ jobs:
             ~/.ansible/collections
           key: >-
             ${{ runner.os }}-ansible-deps-${{
-              hashFiles(
-                format('{0}/requirements.yml', needs.role_name.outputs.role_name),
-                format('{0}/molecule/resources/requirements.yml', needs.role_name.outputs.role_name)
-              )
+              hashFiles(format('{0}/requirements.yml', needs.role_name.outputs.role_name))
             }}
 
       - uses: actions/setup-python@v6
