@@ -1,0 +1,34 @@
+---
+
+- name: Ensure valid Docker network is used
+  ansible.builtin.assert:
+    that: immich_docker_container_network != 'bridge'
+    fail_msg: The default Docker network 'bridge' cannot be used for Immich.
+
+- name: Include Docker volumes
+  ansible.builtin.import_tasks: docker_volumes.yml
+
+- name: Create Immich Docker network
+  community.docker.docker_network:
+    name: "{{ immich_docker_container_network }}"
+    state: present
+
+- name: Ensure required directories exist on the host
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
+    mode: "{{ item.mode }}"
+    state: directory
+  become: true
+  loop: "{{ immich_docker_dirs_to_create }}"
+  loop_control:
+    label: "{{ item.path }}"
+
+- name: Deploy Immich containers # noqa args[module]
+  community.docker.docker_container: "{{ item }}"
+  loop: "{{ immich_docker_containers }}"
+  register: containers_result
+  loop_control:
+    label: "{{ item.name }}"
+    break_when: containers_result is failed

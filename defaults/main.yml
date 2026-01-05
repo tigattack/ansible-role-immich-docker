@@ -1,0 +1,83 @@
+---
+
+# region Global Settings
+
+immich_docker_container_base_name: immich
+
+# community.docker versions >=4.7.0 can use the "healthy" state, whereas <4.7.0 need to use "started"
+# Ref: https://github.com/ansible-collections/community.docker/issues/890
+immich_docker_containers_state: healthy
+
+immich_docker_container_network: immich
+
+# region Core application
+
+immich_docker_version: release
+
+# Example:
+# immich_docker_env_vars:
+#   IMMICH_LOG_LEVEL: "verbose"
+immich_docker_env_vars: {}
+
+# region Storage
+
+immich_docker_bind_paths_root: /opt/immich
+
+# 'immich_docker_*_bind_path' variables are mutually exclusive with matching 'immich_docker_*_volume' variables
+# (e.g. immich_docker_storage_bind_path, immich_docker_storage_volume).
+# The defined bind path will only be used if the matching 'immich_docker_*_use_docker_volume' variable is false.
+
+immich_docker_data_bind_path: "{{ [immich_docker_bind_paths_root, 'data'] | path_join }}"
+
+immich_docker_storage_bind_path: "{{ [immich_docker_bind_paths_root, 'storage'] | path_join }}"
+
+immich_docker_db_data_bind_path: "{{ [immich_docker_bind_paths_root, 'db'] | path_join }}"
+
+immich_docker_storage_use_docker_volume: false
+# See https://docs.ansible.com/ansible/latest/collections/community/docker/docker_volume_module.html
+immich_docker_storage_volume:
+  name: immich_storage
+  driver: local
+  driver_options: {}
+
+immich_docker_model_cache_use_docker_volume: true
+# See https://docs.ansible.com/ansible/latest/collections/community/docker/docker_volume_module.html
+immich_docker_model_cache_volume:
+  name: immich_model_cache
+  driver: local
+  driver_options: {}
+
+# Allow configuring extra volumes (bind mounts).
+# Example:
+# - source: /host/path
+#   target: /container/path
+#   type: bind
+#   read_only: true
+immich_docker_extra_volumes: []
+immich_docker_machine_learning_extra_volumes: []
+
+# region Machine learning
+
+immich_docker_machine_learning_version: release
+
+# ML Hardware Acceleration
+# See https://docs.immich.app/features/ml-hardware-acceleration/
+immich_docker_machine_learning_acceleration: cpu
+
+immich_docker_machine_learning_env_vars: {}
+
+# region PostgreSQL
+
+immich_docker_deploy_postgres: true
+immich_docker_postgres_version: '14-vectorchord0.4.3-pgvectors0.2.0'
+immich_docker_postgres_image: "ghcr.io/immich-app/postgres:{{ immich_docker_postgres_version }}"
+
+immich_docker_db_username: postgres
+immich_docker_db_database_name: immich
+immich_docker_db_password: postgres
+
+# region Redis
+
+immich_docker_deploy_redis: true
+immich_docker_redis_version: 9
+immich_docker_redis_image: "docker.io/valkey/valkey:{{ immich_docker_redis_version }}"

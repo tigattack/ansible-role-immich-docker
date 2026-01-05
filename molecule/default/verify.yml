@@ -1,0 +1,36 @@
+---
+- name: Verify
+  hosts: all
+  pre_tasks:
+    - name: Get Immich server container info
+      community.docker.docker_container_info:
+        name: immich_server
+      register: container_info
+
+    - name: Parse Immich container IP
+      ansible.builtin.set_fact:
+        immich_container_ip: "{{ container_info.container.NetworkSettings.Networks.values() | map(attribute='IPAddress') | list | first }}"
+
+  tasks:
+    - name: Assert Immich is healthy
+      ansible.builtin.assert:
+        that: container_info.container.State.Health.Status == 'healthy'
+        success_msg: Immich container passed health check.
+
+    - name: Assert Immich has IP
+      ansible.builtin.assert:
+        that: immich_container_ip | string | length > 0
+
+    - name: Verify Immich responds to API request
+      ansible.builtin.uri:
+        url: http://{{ immich_container_ip }}:2283/api/server-info/ping
+        return_content: true
+      failed_when: false
+      register: immich_api_response
+
+    - name: Assert Immich responds to API request
+      ansible.builtin.assert:
+        that: immich_api_response.status == 200
+        success_msg: >-
+          Immich API 'ping' endpoint query succeeded with response:
+          {{ immich_api_response.content }}

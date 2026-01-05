@@ -1,0 +1,16 @@
+---
+galaxy_info:
+  author: tigattack
+  namespace: tigattack
+  role_name: immich_docker
+  description: Deploy Immich in Docker.
+  license: MIT
+  company: none
+  min_ansible_version: "2.11"
+  galaxy_tags:
+    - system
+    - docker
+    - immich
+    - photos
+    - media
+dependencies: []

@@ -1,0 +1,77 @@
+---
+
+- name: Immich storage Docker volume
+  when: immich_docker_storage_use_docker_volume
+  block:
+    - name: Check if Immich storage Docker volume would change
+      community.docker.docker_volume:
+        name: "{{ immich_docker_storage_volume.name }}"
+        driver: "{{ immich_docker_storage_volume.driver }}"
+        driver_options: "{{ immich_docker_storage_volume.driver_options }}"
+        recreate: options-changed
+        state: present
+      register: storage_volume_check
+      check_mode: true
+      no_log: true
+
+    - name: Change Immich storage Docker volume
+      when: storage_volume_check is changed # noqa no-handler
+      block:
+        - name: Get Immich server container info
+          community.docker.docker_container_info:
+            name: "{{ immich_docker_server_container_name }}"
+          register: immich_server_container_info
+
+        - name: Stop Immich server container
+          community.docker.docker_container:
+            name: "{{ immich_docker_server_container_name }}"
+            state: stopped
+            comparisons:
+              '*': ignore
+          when: immich_server_container_info.exists
+
+        - name: Ensure Immich storage Docker volume
+          community.docker.docker_volume:
+            name: "{{ immich_docker_storage_volume.name }}"
+            driver: "{{ immich_docker_storage_volume.driver }}"
+            driver_options: "{{ immich_docker_storage_volume.driver_options }}"
+            recreate: options-changed
+            state: present
+
+- name: Immich model cache Docker volume
+  when: immich_docker_model_cache_use_docker_volume
+  block:
+    - name: Check if Immich model cache Docker volume would change
+      community.docker.docker_volume:
+        name: "{{ immich_docker_model_cache_volume.name }}"
+        driver: "{{ immich_docker_model_cache_volume.driver }}"
+        driver_options: "{{ immich_docker_model_cache_volume.driver_options }}"
+        recreate: options-changed
+        state: present
+      register: model_cache_volume_check
+      check_mode: true
+      no_log: true
+
+    - name: Change Immich model cache Docker volume
+      when: model_cache_volume_check is changed # noqa no-handler
+      block:
+        - name: Get Immich machine learning container info
+          community.docker.docker_container_info:
+            name: "{{ immich_docker_machine_learning_container_name }}"
+          register: immich_ml_container_info
+
+        - name: Stop Immich machine learning container
+          community.docker.docker_container:
+            name: "{{ immich_docker_machine_learning_container_name }}"
+            state: stopped
+            comparisons:
+              '*': ignore
+          when: immich_ml_container_info.exists
+
+        - name: Ensure Immich model cache Docker volume
+          community.docker.docker_volume:
+            name: "{{ immich_docker_model_cache_volume.name }}"
+            driver: "{{ immich_docker_model_cache_volume.driver }}"
+            driver_options: "{{ immich_docker_model_cache_volume.driver_options }}"
+            recreate: options-changed
+            state: present

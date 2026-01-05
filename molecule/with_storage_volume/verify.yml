@@ -1,0 +1,32 @@
+---
+- name: Verify
+  hosts: all
+  tasks:
+    - name: Get Immich server container info
+      community.docker.docker_container_info:
+        name: immich_server
+      register: container_info
+
+    - name: Get Immich storage volume info
+      community.docker.docker_volume_info:
+        name: immich_storage
+      register: storage_volume_info
+
+    - name: Assert Immich storage volume exists
+      ansible.builtin.assert:
+        that: storage_volume_info.exists
+        success_msg: Immich storage volume exists
+
+    - name: Assert Immich is using the correct storage volume
+      ansible.builtin.assert:
+        that: >-
+          container_info.container.Mounts
+          | selectattr('Type', 'equalto', 'volume')
+          | selectattr('Name', 'equalto', 'immich_storage')
+          | length > 0
+        success_msg: Immich is using the correct storage volume
+
+    - name: Assert Immich is healthy
+      ansible.builtin.assert:
+        that: container_info.container.State.Health.Status == 'healthy'
+        success_msg: Immich container passed health check.

@@ -1,0 +1,17 @@
+---
+
+- name: Restart Immich Server
+  community.docker.docker_container:
+    name: "{{ immich_docker_server_container_name }}"
+    restart: true
+    state: started
+    comparisons:
+      '*': ignore
+
+- name: Restart Immich Machine Learning
+  community.docker.docker_container:
+    name: "{{ immich_docker_machine_learning_container_name }}"
+    restart: true
+    state: started
+    comparisons:
+      '*': ignore

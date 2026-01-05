@@ -1,0 +1,120 @@
+---
+name: Test
+on:
+  push:
+    branches: [main]
+    tags-ignore:
+      - '**'
+    paths:
+      - '*/**.yml'
+      - '*/**.yaml'
+      - '.github/workflows/**'
+      - 'requirements.{yml,yaml,txt}'
+      - '.ansible-lint'
+  schedule:
+    - cron: "0 5 * * 1"
+  pull_request:
+    paths:
+      - '*/**.yml'
+      - '*/**.yaml'
+      - '.github/workflows/**'
+      - 'requirements.{yml,yaml,txt}'
+      - '.ansible-lint'
+  workflow_dispatch:
+  workflow_call:
+    outputs:
+      role_name:
+        description: 'Ansible role name'
+        value: ${{ jobs.role_name.outputs.role_name }}
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: ansible/ansible-lint@v25.12.2
+        with:
+          requirements_file: requirements.yml
+          args: "--exclude molecule"
+
+  role_name:
+    runs-on: ubuntu-latest
+    outputs:
+      role_name: ${{ steps.get_role_name.outputs.role_name }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - id: get_role_name
+        run: |
+          namespace=`yq eval '.galaxy_info.namespace' meta/main.yml`
+          role_name=`yq eval '.galaxy_info.role_name' meta/main.yml`
+          echo "role_name=${namespace}.${role_name}" | tee -a $GITHUB_OUTPUT
+
+  gather_tests:
+    runs-on: ubuntu-latest
+    outputs:
+      tests: ${{ steps.tests.outputs.tests }}
+      min_version: ${{ steps.version.outputs.min_version }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          sparse-checkout: |
+            molecule
+
+      - name: Get Molecule tests
+        id: tests
+        run: |
+          tests=$(
+            find molecule -type d -maxdepth 1 -mindepth 1 -not -name 'resources' | \
+            sed 's/molecule\///' | \
+            sort | \
+            jq -R -s -c 'split("\n") | map(select(length > 0))'
+          )
+          echo "tests=$tests" | tee -a $GITHUB_OUTPUT
+
+  molecule_test:
+    runs-on: ubuntu-latest
+    needs: [gather_tests, role_name]
+    strategy:
+      fail-fast: false
+      matrix:
+        test: ${{ fromJSON(needs.gather_tests.outputs.tests) }}
+        version:
+          - ${{ needs.gather_tests.outputs.min_version }}
+          - latest
+    defaults:
+      run:
+        working-directory: ${{ needs.role_name.outputs.role_name }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          path: ${{ needs.role_name.outputs.role_name }}
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.ansible/roles
+            ~/.ansible/collections
+          key: >-
+            ${{ runner.os }}-ansible-deps-${{
+              hashFiles(
+                format('{0}/requirements.yml', needs.role_name.outputs.role_name),
+                format('{0}/molecule/resources/requirements.yml', needs.role_name.outputs.role_name)
+              )
+            }}
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.x'
+          cache: 'pip'
+
+      - run: pip install -r requirements.txt
+
+      - run: |
+          molecule -v converge -s ${{ matrix.test }}
+          molecule -v idempotence -s ${{ matrix.test }}
+          molecule -v verify -s ${{ matrix.test }}
+        env:
+          PY_COLORS: '1'
+          ANSIBLE_FORCE_COLOR: '1'

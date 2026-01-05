@@ -1,0 +1,172 @@
+---
+
+immich_docker_server_container_name: "{{ immich_docker_container_base_name }}_server"
+immich_docker_machine_learning_container_name: "{{ immich_docker_container_base_name }}_machine_learning"
+immich_docker_redis_container_name: "{{ immich_docker_container_base_name }}_redis"
+immich_docker_postgres_container_name: "{{ immich_docker_container_base_name }}_postgres"
+
+# Directories that must exist on the host for bind mounts
+immich_docker_dirs:
+  data:
+    path: "{{ immich_docker_data_bind_path }}"
+    owner: root
+    group: root
+    mode: '0755'
+  storage:
+    path: "{{ immich_docker_storage_bind_path }}"
+    owner: root
+    group: root
+    mode: '0755'
+  db_data:
+    path: "{{ immich_docker_db_data_bind_path }}"
+    owner: '999'
+    group: '999'
+    mode: '0700'
+
+immich_docker_dirs_to_create: >-
+  {{
+    [immich_docker_dirs.data] +
+    (
+      [immich_docker_dirs.storage] if not immich_docker_storage_use_docker_volume
+      else []
+    ) +
+    (
+      [immich_docker_dirs.db_data] if immich_docker_deploy_postgres
+      else []
+    )
+  }}
+
+immich_docker_server_env: |
+  {{
+    {
+      'DB_HOSTNAME': immich_docker_postgres_container_name,
+      'DB_PORT': '5432',
+      'DB_USERNAME': immich_docker_db_username,
+      'DB_PASSWORD': immich_docker_db_password,
+      'DB_DATABASE_NAME': immich_docker_db_database_name,
+      'REDIS_HOSTNAME': immich_docker_redis_container_name,
+      'REDIS_PORT': '6379'
+    } | combine(immich_docker_env_vars)
+  }}
+
+immich_docker_container_mounts_base:
+  - type: bind
+    read_only: true
+    source: /etc/localtime
+    target: /etc/localtime
+  - type: "{{ 'volume' if immich_docker_storage_use_docker_volume else 'bind' }}"
+    target: /data
+    source: "{{ immich_docker_storage_volume.name if immich_docker_storage_use_docker_volume else immich_docker_storage_bind_path }}"
+
+immich_docker_container_mounts: >-
+  {{
+    immich_docker_container_mounts_base +
+    immich_docker_extra_volumes
+    if immich_docker_extra_volumes | length > 0 else
+    immich_docker_container_mounts_base
+  }}
+
+immich_docker_machine_learning_mounts_base:
+  - type: "{{ 'volume' if immich_docker_model_cache_use_docker_volume else 'bind' }}"
+    target: /cache
+    source: "{{ immich_docker_model_cache_volume.name if immich_docker_model_cache_use_docker_volume else immich_docker_model_cache_bind_path }}"
+
+immich_docker_machine_learning_mounts: >-
+  {{
+    immich_docker_machine_learning_mounts_base + (
+      immich_docker_machine_learning_extra_volumes
+      if immich_docker_machine_learning_extra_volumes | length > 0 else []
+    )
+  }}
+
+immich_docker_server_container:
+  name: "{{ immich_docker_server_container_name }}"
+  image: ghcr.io/immich-app/immich-server:{{ immich_docker_version }}
+  restart_policy: unless-stopped
+  networks: >-
+    {{
+      [{'name': immich_docker_container_network}]
+      if immich_docker_container_network | string | length > 0
+      else omit
+    }}
+  mounts: "{{ immich_docker_container_mounts }}"
+  ports: ['2283:2283']
+  env: "{{ immich_docker_server_env }}"
+  state: "{{ immich_docker_containers_state }}"
+
+immich_docker_machine_learning_image_tag: >-
+  {{
+    immich_docker_machine_learning_version ~
+    (
+      '-' ~ immich_docker_machine_learning_acceleration
+      if immich_docker_machine_learning_acceleration != 'cpu'
+      else ''
+    )
+  }}
+
+immich_docker_machine_learning_container:
+  name: "{{ immich_docker_machine_learning_container_name }}"
+  image: "ghcr.io/immich-app/immich-machine-learning:{{ immich_docker_machine_learning_image_tag | trim }}"
+  restart_policy: unless-stopped
+  networks: >-
+    {{
+      [{'name': immich_docker_container_network}]
+      if immich_docker_container_network | string | length > 0
+      else omit
+    }}
+  mounts: "{{ immich_docker_machine_learning_mounts }}"
+  env: "{{ immich_docker_machine_learning_env_vars }}"
+  state: "{{ immich_docker_containers_state }}"
+
+
+immich_docker_redis_container:
+  name: "{{ immich_docker_redis_container_name }}"
+  image: "{{ immich_docker_redis_image }}"
+  restart_policy: unless-stopped
+  networks: >-
+    {{
+      [{'name': immich_docker_container_network}]
+      if immich_docker_container_network | string | length > 0
+      else omit
+    }}
+  healthcheck:
+    test: redis-cli ping || exit 1
+    start_period: 5s
+  state: "{{ immich_docker_containers_state }}"
+
+
+immich_docker_postgres_container:
+  name: "{{ immich_docker_postgres_container_name }}"
+  image: "{{ immich_docker_postgres_image }}"
+  restart_policy: unless-stopped
+  shm_size: 128MB
+  networks: >-
+    {{
+      [{'name': immich_docker_container_network}]
+      if immich_docker_container_network | string | length > 0
+      else omit
+    }}
+  env:
+    POSTGRES_PASSWORD: "{{ immich_docker_db_password }}"
+    POSTGRES_USER: "{{ immich_docker_db_username }}"
+    POSTGRES_DB: "{{ immich_docker_db_database_name }}"
+    POSTGRES_INITDB_ARGS: '--data-checksums'
+  # healthcheck:
+  #   test: pg_isready --dbname="{{ immich_docker_db_database_name }}" --username="{{ immich_docker_db_username }}" || exit 1
+  mounts:
+    - type: bind
+      target: /var/lib/postgresql/data
+      source: "{{ immich_docker_db_data_bind_path }}"
+  state: "{{ immich_docker_containers_state }}"
+
+immich_docker_containers: >-
+  {{
+    (
+      [immich_docker_redis_container] if immich_docker_deploy_redis else []
+    ) +
+    (
+      [immich_docker_postgres_container] if immich_docker_deploy_postgres else []
+    ) +
+    [immich_docker_machine_learning_container] +
+    [immich_docker_server_container]
+  }}
