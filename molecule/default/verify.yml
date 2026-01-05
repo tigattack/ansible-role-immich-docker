@@ -15,7 +15,6 @@
     - name: Assert Immich is healthy
       ansible.builtin.assert:
         that: container_info.container.State.Health.Status == 'healthy'
-        success_msg: Immich container passed health check.
 
     - name: Assert Immich has IP
       ansible.builtin.assert:
@@ -33,4 +32,3 @@
         that:
           - immich_api_response.status == 200
           - immich_api_response.json.res == 'pong'
-        success_msg: Immich API ping succeeded

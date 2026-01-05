@@ -1,0 +1,95 @@
+---
+- name: Verify
+  hosts: all
+  tasks:
+    - name: Get Immich server container info
+      community.docker.docker_container_info:
+        name: immich_server
+      register: container_info
+
+    - name: Get machine learning container info
+      community.docker.docker_container_info:
+        name: immich_machine_learning
+      register: ml_container_info
+
+    - name: Get Immich storage volume info
+      community.docker.docker_volume_info:
+        name: immich_storage
+      register: storage_volume_info
+
+    - name: Get Immich model cache volume info
+      community.docker.docker_volume_info:
+        name: immich_model_cache
+      register: model_cache_volume_info
+
+    - name: Assert volumes exist
+      ansible.builtin.assert:
+        that:
+          - storage_volume_info.exists
+          - model_cache_volume_info.exists
+
+    - name: Assert volumes have correct driver options
+      ansible.builtin.assert:
+        that:
+          - storage_volume_info.volume.Options.type == 'none'
+          - storage_volume_info.volume.Options.o == 'bind'
+          - storage_volume_info.volume.Options.device == '/opt/immich_new_storage'
+          - model_cache_volume_info.volume.Options.type == 'none'
+          - model_cache_volume_info.volume.Options.o == 'bind'
+          - model_cache_volume_info.volume.Options.device == '/opt/immich_new_model_cache'
+
+    - name: Assert Immich server container is using the correct storage volume
+      ansible.builtin.assert:
+        that: >-
+          container_info.container.Mounts
+          | selectattr('Type', 'equalto', 'volume')
+          | selectattr('Name', 'equalto', 'immich_storage')
+          | length > 0
+
+    - name: Assert ML container is using the correct model cache volume
+      ansible.builtin.assert:
+        that: >-
+          ml_container_info.container.Mounts
+          | selectattr('Type', 'equalto', 'volume')
+          | selectattr('Name', 'equalto', 'immich_model_cache')
+          | length > 0
+
+    - name: Assert Immich is healthy
+      ansible.builtin.assert:
+        that:
+          - container_info.container.State.Health.Status == 'healthy'
+          - ml_container_info.container.State.Health.Status == 'healthy'
+
+    - name: Create test file to verify volume is writable
+      ansible.builtin.command:
+        cmd: docker exec immich_server sh -c 'echo "Test writability" > /data/test_write.txt'
+      changed_when: true
+
+    - name: Read test file to verify writability
+      ansible.builtin.command:
+        cmd: docker exec immich_server cat /data/test_write.txt
+      register: test_file_content
+      changed_when: false
+
+    - name: Assert volume is writable
+      ansible.builtin.assert:
+        that:
+          - "'Test writability' in test_file_content.stdout"
+        fail_msg: Docker volume is not writable after config change
+
+    - name: Create test file to verify model cache volume is writable
+      ansible.builtin.command:
+        cmd: docker exec immich_machine_learning sh -c 'echo "Test model cache" > /cache/test_write.txt'
+      changed_when: true
+
+    - name: Read test file from model cache to verify writability
+      ansible.builtin.command:
+        cmd: docker exec immich_machine_learning cat /cache/test_write.txt
+      register: model_cache_file_content
+      changed_when: false
+
+    - name: Assert model cache volume is writable
+      ansible.builtin.assert:
+        that:
+          - "'Test model cache' in model_cache_file_content.stdout"
+        fail_msg: Model cache volume is not writable after config change
