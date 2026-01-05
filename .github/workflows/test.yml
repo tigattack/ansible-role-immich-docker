@@ -127,9 +127,10 @@ jobs:
         uses: actions/download-artifact@v7
         with:
           name: test-image
+          path: ${{ runner.temp }}
 
       - name: Load Docker image
-        run: docker load -i test-image.tar
+        run: docker load -i ${{ runner.temp }}/test-image.tar
 
       - uses: actions/cache@v4
         with:
