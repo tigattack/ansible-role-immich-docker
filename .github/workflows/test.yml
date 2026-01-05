@@ -82,7 +82,7 @@ jobs:
         run: |
           cat > Dockerfile << 'EOF'
           FROM geerlingguy/docker-debian13-ansible:latest
-          RUN curl -fsSL https://get.docker.com -o get-docker.sh &&\
+          RUN wget -qO get-docker.sh https://get.docker.com &&\
               sh get-docker.sh &&\
               rm get-docker.sh &&\
               rm -rf /var/lib/apt/lists/* &&\
