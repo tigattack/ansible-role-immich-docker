@@ -3,3 +3,6 @@
   hosts: all
   roles:
     - role: tigattack.immich_docker
+      vars:
+        immich_docker_storage_use_docker_volume: false
+        immich_docker_model_cache_use_docker_volume: false

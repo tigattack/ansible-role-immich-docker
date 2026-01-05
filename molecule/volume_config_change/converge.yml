@@ -1,23 +1,6 @@
 ---
 - name: Converge
   hosts: all
-  vars:
-    immich_docker_storage_use_docker_volume: true
-    immich_docker_model_cache_use_docker_volume: true
-    immich_docker_storage_volume:
-      name: immich_storage
-      driver: local
-      driver_options:
-        type: none
-        o: bind
-        device: /opt/immich_new_storage
-    immich_docker_model_cache_volume:
-      name: immich_model_cache
-      driver: local
-      driver_options:
-        type: none
-        o: bind
-        device: /opt/immich_new_model_cache
   pre_tasks:
     - name: Create new directories for volume drivers
       ansible.builtin.file:
@@ -28,5 +11,21 @@
       loop:
         - /opt/immich_new_storage
         - /opt/immich_new_model_cache
+
   roles:
     - role: tigattack.immich_docker
+      vars:
+        immich_docker_storage_volume:
+          name: immich_storage
+          driver: local
+          driver_options:
+            type: none
+            o: bind
+            device: /opt/immich_new_storage
+        immich_docker_model_cache_volume:
+          name: immich_model_cache
+          driver: local
+          driver_options:
+            type: none
+            o: bind
+            device: /opt/immich_new_model_cache

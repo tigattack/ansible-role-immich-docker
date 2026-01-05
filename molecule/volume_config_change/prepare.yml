@@ -1,8 +1,5 @@
 ---
 - name: Prepare
   hosts: all
-  vars:
-    immich_docker_storage_use_docker_volume: true
-    immich_docker_model_cache_use_docker_volume: true
   roles:
     - role: tigattack.immich_docker

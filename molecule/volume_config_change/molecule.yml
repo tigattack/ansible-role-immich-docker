@@ -33,6 +33,7 @@ provisioner:
     group_vars:
       all:
         immich_docker_storage_use_docker_volume: true
+        immich_docker_model_cache_use_docker_volume: true
 
 scenario:
   test_sequence:
