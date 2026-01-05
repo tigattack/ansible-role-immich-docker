@@ -87,7 +87,8 @@ jobs:
               rm get-docker.sh &&\
               rm -rf /var/lib/apt/lists/* &&\
               apt-get clean
-          RUN pip3 --no-cache-dir install docker
+          RUN find /usr/lib/python3* -name EXTERNALLY-MANAGED -exec rm -v {} + &&\
+              pip3 --no-cache-dir install docker
           EOF
 
       - name: Build and export test image
