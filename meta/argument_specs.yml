@@ -246,7 +246,7 @@ argument_specs:
         default: cpu
         description:
           - Hardware acceleration backend for machine learning.
-          - See U(https://docs.immich.app/features/ml-hardware-acceleration/) for more information.
+          - See U(https://docs.immich.app/features/ml-hardware-acceleration/) for detailed prerequisites and configuration information.
 
       immich_docker_machine_learning_env_vars:
         type: dict

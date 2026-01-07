@@ -144,6 +144,31 @@ immich_docker_storage_volume:
 > [!NOTE]
 > When using hardware acceleration (i.e., `immich_docker_machine_learning_acceleration` is not `cpu`), the ML container image will automatically use the appropriate tag suffix (e.g., `-cuda`, `-armnn`).
 
+#### Hardware Acceleration
+
+This role supports configuration of Immich's machine learning service.
+
+**Configuration Examples:**
+
+```yaml
+# NVIDIA CUDA example
+immich_docker_machine_learning_acceleration: cuda
+
+# ARM NN example
+immich_docker_machine_learning_acceleration: armnn
+
+# Rockchip NPU example
+immich_docker_machine_learning_acceleration: rknn
+
+# Multi-GPU Support (CUDA/OpenVINO)
+immich_docker_machine_learning_acceleration: cuda
+immich_docker_machine_learning_env_vars:
+  MACHINE_LEARNING_DEVICE_IDS: "0,1"  # Use GPUs 0 and 1
+  MACHINE_LEARNING_WORKERS: "2"       # One worker per GPU
+```
+
+For detailed information, prerequisites, and troubleshooting, see the official documentation: <https://docs.immich.app/features/ml-hardware-acceleration/>
+
 ### PostgreSQL Settings
 
 | Variable | Type | Default | Required |

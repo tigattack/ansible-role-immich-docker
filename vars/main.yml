@@ -141,6 +141,86 @@ immich_docker_machine_learning_image_tag: >-
     )
   }}
 
+# Hardware acceleration configuration for each backend
+# These settings are applied when the corresponding acceleration backend is selected
+# Based on https://github.com/immich-app/immich/releases/latest/download/hwaccel.ml.yml
+
+# Hardware acceleration configuration lookup
+immich_docker_ml_hwaccel_config_map:
+  # ARM NN (Mali)
+  armnn:
+    devices:
+      - /dev/mali0:/dev/mali0
+    mounts:
+      - type: bind
+        source: /lib/firmware/mali_csffw.bin
+        target: /lib/firmware/mali_csffw.bin
+        read_only: true
+      - type: bind
+        source: /usr/lib/libmali.so
+        target: /usr/lib/libmali.so
+        read_only: true
+
+  # CUDA (NVIDIA GPUs)
+  cuda:
+    device_requests:
+      - driver: nvidia
+        count: 1
+        capabilities:
+          - gpu
+
+  # ROCm (AMD GPUs)
+  rocm:
+    groups:
+      - video
+    devices:
+      - /dev/dri:/dev/dri
+      - /dev/kfd:/dev/kfd
+
+  # OpenVINO (Intel GPUs)
+  openvino:
+    device_cgroup_rules:
+      - 'c 189:* rmw'
+    devices:
+      - /dev/dri:/dev/dri
+    mounts:
+      - type: bind
+        source: /dev/bus/usb
+        target: /dev/bus/usb
+
+  # OpenVINO-WSL (Intel GPUs on WSL2)
+  openvino-wsl:
+    devices:
+      - /dev/dri:/dev/dri
+      - /dev/dxg:/dev/dxg
+    mounts:
+      - type: bind
+        source: /dev/bus/usb
+        target: /dev/bus/usb
+      - type: bind
+        source: /usr/lib/wsl
+        target: /usr/lib/wsl
+
+  # RKNN (Rockchip)
+  rknn:
+    security_opt:
+      - systempaths=unconfined
+      - apparmor=unconfined
+    devices:
+      - /dev/dri:/dev/dri
+
+# Get the hardware acceleration config for the selected backend
+immich_docker_ml_hwaccel_config: >-
+  {{
+    immich_docker_ml_hwaccel_config_map[immich_docker_machine_learning_acceleration]
+    if immich_docker_machine_learning_acceleration in immich_docker_ml_hwaccel_config_map
+    else {}
+  }}
+
+# Merge hardware acceleration mounts with base mounts
+immich_docker_machine_learning_mounts_with_hwaccel: >-
+  {{ immich_docker_machine_learning_mounts + (immich_docker_ml_hwaccel_config.mounts | default([])) }}
+
 # Machine learning container definition
 immich_docker_machine_learning_container:
   name: "{{ immich_docker_machine_learning_container_name }}"
@@ -154,8 +234,13 @@ immich_docker_machine_learning_container:
       if immich_docker_container_network | string | length > 0
       else omit
     }}
-  mounts: "{{ immich_docker_machine_learning_mounts }}"
+  mounts: "{{ immich_docker_machine_learning_mounts_with_hwaccel }}"
   env: "{{ immich_docker_machine_learning_env_vars }}"
+  devices: "{{ immich_docker_ml_hwaccel_config.devices | default(omit) }}"
+  device_requests: "{{ immich_docker_ml_hwaccel_config.device_requests | default(omit) }}"
+  device_cgroup_rules: "{{ immich_docker_ml_hwaccel_config.device_cgroup_rules | default(omit) }}"
+  security_opt: "{{ immich_docker_ml_hwaccel_config.security_opt | default(omit) }}"
+  groups: "{{ immich_docker_ml_hwaccel_config.groups | default(omit) }}"
   state: "{{ immich_docker_containers_state }}"
 
 # region PostgreSQL
