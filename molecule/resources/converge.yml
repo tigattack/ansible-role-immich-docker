@@ -3,3 +3,5 @@
   hosts: all
   roles:
     - role: tigattack.immich_docker
+      vars:
+        immich_docker_db_password: immich_test_password

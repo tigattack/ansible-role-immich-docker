@@ -32,7 +32,8 @@ provisioner:
   inventory:
     group_vars:
       all:
-        immich_docker_storage_use_docker_volume: true
+        immich_docker_db_password: immich_test_password
+        immich_docker_data_use_docker_volume: true
         immich_docker_model_cache_use_docker_volume: true
 
 scenario:

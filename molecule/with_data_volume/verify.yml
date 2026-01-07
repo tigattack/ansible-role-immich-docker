@@ -7,21 +7,21 @@
         name: immich-server
       register: container_info
 
-    - name: Get Immich storage volume info
+    - name: Get Immich data volume info
       community.docker.docker_volume_info:
-        name: immich_storage
-      register: storage_volume_info
+        name: immich_data
+      register: data_volume_info
 
-    - name: Assert Immich storage volume exists
+    - name: Assert Immich data volume exists
       ansible.builtin.assert:
-        that: storage_volume_info.exists
+        that: data_volume_info.exists
 
-    - name: Assert Immich is using the correct storage volume
+    - name: Assert Immich is using the correct data volume
       ansible.builtin.assert:
         that: >-
           container_info.container.Mounts
           | selectattr('Type', 'equalto', 'volume')
-          | selectattr('Name', 'equalto', 'immich_storage')
+          | selectattr('Name', 'equalto', 'immich_data')
           | length > 0
 
     - name: Assert Immich is healthy

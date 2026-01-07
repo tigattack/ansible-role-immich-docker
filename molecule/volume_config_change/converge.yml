@@ -9,19 +9,19 @@
         mode: '0755'
       become: true
       loop:
-        - /opt/immich_new_storage
+        - /opt/immich_new_data
         - /opt/immich_new_model_cache
 
   roles:
     - role: tigattack.immich_docker
       vars:
-        immich_docker_storage_volume:
-          name: immich_storage
+        immich_docker_data_volume:
+          name: immich_data
           driver: local
           driver_options:
             type: none
             o: bind
-            device: /opt/immich_new_storage
+            device: /opt/immich_new_data
         immich_docker_model_cache_volume:
           name: immich_model_cache
           driver: local

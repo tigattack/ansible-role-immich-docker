@@ -22,7 +22,7 @@ immich_docker_env_vars: {}
 # region Storage
 
 # 'immich_docker_*_bind_path' variables are mutually exclusive with matching 'immich_docker_*_volume' variables
-# (e.g. immich_docker_storage_bind_path, immich_docker_storage_volume).
+# (e.g. immich_docker_data_bind_path, immich_docker_data_volume).
 # The defined bind path will only be used if the matching 'immich_docker_*_use_docker_volume' variable is false.
 
 # For 'immich_docker_*_volume' variables, see: https://docs.ansible.com/ansible/latest/collections/community/docker/docker_volume_module.html
@@ -31,8 +31,6 @@ immich_docker_bind_paths_root: /opt/immich
 
 immich_docker_data_bind_path: "{{ [immich_docker_bind_paths_root, 'data'] | path_join }}"
 
-immich_docker_storage_bind_path: "{{ [immich_docker_bind_paths_root, 'storage'] | path_join }}"
-
 immich_docker_model_cache_bind_path: "{{ [immich_docker_bind_paths_root, 'model_cache'] | path_join }}"
 
 immich_docker_db_data_bind_path: "{{ [immich_docker_bind_paths_root, 'db'] | path_join }}"
@@ -40,12 +38,6 @@ immich_docker_db_data_bind_path: "{{ [immich_docker_bind_paths_root, 'db'] | pat
 immich_docker_data_use_docker_volume: false
 immich_docker_data_volume:
   name: immich_data
-  driver: local
-  driver_options: {}
-
-immich_docker_storage_use_docker_volume: false
-immich_docker_storage_volume:
-  name: immich_storage
   driver: local
   driver_options: {}
 

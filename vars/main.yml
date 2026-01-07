@@ -17,12 +17,6 @@ immich_docker_dirs:
     group: root
     mode: '0755'
     when: "{{ not immich_docker_data_use_docker_volume }}"
-  - description: Immich storage directory
-    path: "{{ immich_docker_storage_bind_path }}"
-    owner: root
-    group: root
-    mode: '0755'
-    when: "{{ not immich_docker_storage_use_docker_volume }}"
   - description: Immich ML model cache directory
     path: "{{ immich_docker_model_cache_bind_path }}"
     owner: root
@@ -43,11 +37,6 @@ immich_docker_volumes_to_manage:
     config: "{{ immich_docker_data_volume }}"
     container_name: "{{ immich_docker_server_container_name }}"
     when: "{{ immich_docker_data_use_docker_volume }}"
-  - description: Immich storage volume
-    container_description: Immich server container
-    config: "{{ immich_docker_storage_volume }}"
-    container_name: "{{ immich_docker_server_container_name }}"
-    when: "{{ immich_docker_storage_use_docker_volume }}"
   - description: Immich model cache volume
     container_description: Immich machine learning container
     config: "{{ immich_docker_model_cache_volume }}"
@@ -83,11 +72,8 @@ immich_docker_container_mounts_base:
     source: /etc/localtime
     target: /etc/localtime
   - type: "{{ 'volume' if immich_docker_data_use_docker_volume else 'bind' }}"
-    target: /usr/src/app/upload
-    source: "{{ immich_docker_data_volume.name if immich_docker_data_use_docker_volume else immich_docker_data_bind_path }}"
-  - type: "{{ 'volume' if immich_docker_storage_use_docker_volume else 'bind' }}"
     target: /data
-    source: "{{ immich_docker_storage_volume.name if immich_docker_storage_use_docker_volume else immich_docker_storage_bind_path }}"
+    source: "{{ immich_docker_data_volume.name if immich_docker_data_use_docker_volume else immich_docker_data_bind_path }}"
 
 immich_docker_container_mounts: >-
   {{

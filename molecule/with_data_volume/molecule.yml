@@ -32,7 +32,7 @@ provisioner:
   inventory:
     group_vars:
       all:
-        immich_docker_storage_use_docker_volume: true
+        immich_docker_data_use_docker_volume: true
 
 scenario:
   test_sequence:

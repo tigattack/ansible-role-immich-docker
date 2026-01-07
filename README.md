@@ -52,14 +52,14 @@ See [Example Playbooks](#example-playbooks) below.
 
 For each data volume, you may choose between a bind mount and a Docker volume proper.
 
-These options are mutually exclusive. Using the `immich_docker_storage_*` variables as an example, the following two scenarios explain:
+These options are mutually exclusive. Using the `immich_docker_data_*` variables as an example, the following two scenarios explain:
 
-- `immich_docker_storage_use_docker_volume=false`
-  - Value of `immich_docker_storage_bind_path` is used
-  - Value of `immich_docker_storage_volume` is ignored regardless of value
-- `immich_docker_storage_use_docker_volume=true`
-  - Value of `immich_docker_storage_volume` is used
-  - Value of `immich_docker_storage_bind_path` is ignored regardless of value
+- `immich_docker_data_use_docker_volume=false`
+  - Value of `immich_docker_data_bind_path` is used
+  - Value of `immich_docker_data_volume` is ignored regardless of value
+- `immich_docker_data_use_docker_volume=true`
+  - Value of `immich_docker_data_volume` is used
+  - Value of `immich_docker_data_bind_path` is ignored regardless of value
 
 #### Bind Mounts
 
@@ -67,14 +67,12 @@ These options are mutually exclusive. Using the `immich_docker_storage_*` variab
 |----------|------|---------|----------|
 | `immich_docker_bind_paths_root` | path | `/opt/immich` | ❌ |
 | `immich_docker_data_bind_path` | path | `<immich_docker_bind_paths_root>/data` | ❌ |
-| `immich_docker_storage_bind_path` | path | `<immich_docker_bind_paths_root>/storage` | ❌ |
 | `immich_docker_model_cache_bind_path` | path | `<immich_docker_bind_paths_root>/model_cache` | ❌ |
 | `immich_docker_db_data_bind_path` | path | `<immich_docker_bind_paths_root>/db` | ❌ |
 
 **Details:**
 - `immich_docker_bind_paths_root`: Root path for bind mounts. Used by the following variables' default values. If all are overridden with alternative paths, this has no effect.
 - `immich_docker_data_bind_path`: Immich data path on the host.
-- `immich_docker_storage_bind_path`: Immich storage (uploaded media) path on the host.
 - `immich_docker_model_cache_bind_path`: Immich machine learning model cache path on the host.
 - `immich_docker_db_data_bind_path`: PostgreSQL data path on the host.
 
@@ -84,33 +82,30 @@ These options are mutually exclusive. Using the `immich_docker_storage_*` variab
 |----------|------|---------|----------|
 | `immich_docker_data_use_docker_volume` | bool | `false` | ❌ |
 | `immich_docker_data_volume` | dict | See below | ❌ |
-| `immich_docker_storage_use_docker_volume` | bool | `false` | ❌ |
-| `immich_docker_storage_volume` | dict | See below | ❌ |
 | `immich_docker_model_cache_use_docker_volume` | bool | `false` | ❌ |
 | `immich_docker_model_cache_volume` | dict | See below | ❌ |
 | `immich_docker_db_data_use_docker_volume` | bool | `false` | ❌ |
 | `immich_docker_db_data_volume` | dict | See below | ❌ |
 
-**Defaults:** All Docker volumes default to local volumes, named `immich_<type>` (where `type` is `data`, `storage`, etc.), with no driver options specified.
+**Defaults:** All Docker volumes default to local volumes, named `immich_<type>` (where `type` is `data`, `db`, etc.), with no driver options specified.
 
 **Details:**
 - `immich_docker_data_use_docker_volume`: Use a Docker volume for Immich data instead of a bind mount.
 - `immich_docker_data_volume`: Dictionary of settings for the Immich data Docker volume. See <https://docs.ansible.com/ansible/latest/collections/community/docker/docker_volume_module.html>.
-- `immich_docker_storage_use_docker_volume`: Use a Docker volume for Immich storage (uploaded media) instead of a bind mount.
-- `immich_docker_storage_volume`: Dictionary of settings for the Immich storage Docker volume. See <https://docs.ansible.com/ansible/latest/collections/community/docker/docker_volume_module.html>.
 - `immich_docker_model_cache_use_docker_volume`: Use a Docker volume for Immich machine learning model cache instead of a bind mount.
 - `immich_docker_model_cache_volume`: Dictionary of settings for the Immich model cache Docker volume. See <https://docs.ansible.com/ansible/latest/collections/community/docker/docker_volume_module.html>.
 - `immich_docker_db_data_use_docker_volume`: Use a Docker volume for PostgreSQL data instead of a bind mount.
 - `immich_docker_db_data_volume`: Dictionary of settings for the PostgreSQL data Docker volume. See <https://docs.ansible.com/ansible/latest/collections/community/docker/docker_volume_module.html>.
 
-**Example storage volume with CIFS:**
+**Example data volume with CIFS:**
+
 ```yaml
-immich_docker_storage_volume:
-  name: immich_storage
+immich_docker_data_volume:
+  name: immich_data
   driver: local
   driver_options:
     type: cifs
-    device: //nas/data/photos
+    device: //nas/data/photos/immich
     o: addr=nas,username=immich,password=hunter2,dir_mode=0770,file_mode=0660
 ```
 
@@ -217,7 +212,7 @@ For detailed information, prerequisites, and troubleshooting, see the official d
         immich_docker_db_password: your_secure_password_here
 ```
 
-**With a custom storage volume mount:**
+**With a custom data volume mount:**
 
 ```yml
 ---
@@ -227,9 +222,9 @@ For detailed information, prerequisites, and troubleshooting, see the official d
     - role: tigattack.immich_docker
       vars:
         immich_docker_db_password: your_secure_password_here
-        immich_docker_storage_use_docker_volume: true
-        immich_docker_storage_volume:
-          name: immich_storage
+        immich_docker_data_use_docker_volume: true
+        immich_docker_data_volume:
+          name: immich_data
           driver: local
           driver_options:
             type: cifs
