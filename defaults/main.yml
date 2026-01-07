@@ -19,6 +19,10 @@ immich_docker_version: release
 #   IMMICH_LOG_LEVEL: "verbose"
 immich_docker_env_vars: {}
 
+# Hardware Transcoding Acceleration
+# See https://docs.immich.app/features/hardware-transcoding/
+immich_docker_transcoding_acceleration: cpu
+
 # region Storage
 
 # 'immich_docker_*_bind_path' variables are mutually exclusive with matching 'immich_docker_*_volume' variables

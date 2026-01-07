@@ -43,10 +43,35 @@ See [Example Playbooks](#example-playbooks) below.
 |----------|------|---------|----------|
 | `immich_docker_version` | string | `release` | ❌ |
 | `immich_docker_env_vars` | dict | `{}` | ❌ |
+| `immich_docker_transcoding_acceleration` | string | `cpu` | ❌ |
 
 **Details:**
 - `immich_docker_version`: Immich server Docker image version (tag). Can be `release` or any other valid image tag (e.g. `v2.1.0`, etc). See more at <https://github.com/immich-app/immich/pkgs/container/immich-server>
 - `immich_docker_env_vars`: Environment variables to pass to the Immich server container. Empty dictionary (no env vars) by default.
+- `immich_docker_transcoding_acceleration`: Hardware acceleration backend for video transcoding.
+
+#### Hardware Transcoding
+
+This role supports configuration for hardware transcoding to reduce CPU load during video processing. Hardware transcoding produces larger files than software transcoding but significantly reduces transcoding time and CPU usage.
+
+**Configuration:**
+
+```yaml
+# NVIDIA NVENC example
+immich_docker_transcoding_acceleration: nvenc
+
+# Intel Quick Sync example
+immich_docker_transcoding_acceleration: quicksync
+
+# More available - See docs link below.
+```
+
+> [!IMPORTANT]
+> - NVENC requires NVIDIA Container Toolkit on the host
+> - After enabling hardware acceleration, configure the transcoding settings in the Immich Admin panel
+> - Hardware transcoding is separate from ML hardware acceleration (below) - you can use different backends for each
+
+For detailed configuration, prerequisites, and troubleshooting information, see: <https://docs.immich.app/features/hardware-transcoding/>
 
 ### Storage Settings
 
@@ -249,6 +274,20 @@ For detailed information, prerequisites, and troubleshooting, see the official d
           DB_PORT: 5432
           REDIS_HOSTNAME: external-redis.example.com
           REDIS_PORT: 6379
+```
+
+**With NVIDIA ML and transcoding acceleration:**
+
+```yml
+---
+- name: Deploy Immich with full NVIDIA acceleration
+  hosts: server
+  roles:
+    - role: tigattack.immich_docker
+      vars:
+        immich_docker_db_password: your_secure_password_here
+        immich_docker_machine_learning_acceleration: cuda
+        immich_docker_transcoding_acceleration: nvenc
 ```
 
 ## License

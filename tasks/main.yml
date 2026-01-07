@@ -1,5 +1,9 @@
 ---
 
+- name: Import extra vars
+  ansible.builtin.include_vars:
+    file: hwaccel_config_maps.yml
+
 - name: Ensure valid Docker network is used
   ansible.builtin.assert:
     that: immich_docker_container_network != 'bridge'

@@ -39,6 +39,13 @@ argument_specs:
         default: {}
         description: Environment variables to pass to the Immich server container.
 
+      immich_docker_transcoding_acceleration:
+        type: str
+        default: cpu
+        description:
+          - Hardware acceleration backend for video transcoding.
+          - See U(https://docs.immich.app/features/hardware-transcoding/) for detailed prerequisites and configuration.
+
       immich_docker_bind_paths_root:
         type: path
         default: /opt/immich

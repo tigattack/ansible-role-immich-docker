@@ -1,0 +1,115 @@
+---
+
+# Hardware acceleration configuration for each backend
+# These settings are applied when the corresponding acceleration backend is selected
+# Based on https://github.com/immich-app/immich/releases/latest/download/hwaccel.transcoding.yml
+
+immich_docker_transcoding_hwaccel_config_map:
+  # NVENC (NVIDIA)
+  nvenc:
+    device_requests:
+      - driver: nvidia
+        count: 1
+        capabilities:
+          - gpu
+          - compute
+          - video
+
+  # Quick Sync (Intel)
+  quicksync:
+    devices:
+      - /dev/dri:/dev/dri
+
+  # RKMPP (Rockchip)
+  rkmpp:
+    security_opt:
+      - systempaths=unconfined
+      - apparmor=unconfined
+    groups:
+      - video
+    devices:
+      - /dev/rga:/dev/rga
+      - /dev/dri:/dev/dri
+      - /dev/dma_heap:/dev/dma_heap
+      - /dev/mpp_service:/dev/mpp_service
+
+  # VAAPI (Intel/AMD on Linux)
+  vaapi:
+    devices:
+      - /dev/dri:/dev/dri
+
+  # VAAPI-WSL (Intel/AMD on WSL2)
+  vaapi-wsl:
+    devices:
+      - /dev/dri:/dev/dri
+      - /dev/dxg:/dev/dxg
+    mounts:
+      - type: bind
+        source: /usr/lib/wsl
+        target: /usr/lib/wsl
+    env:
+      LIBVA_DRIVER_NAME: d3d12
+
+
+immich_docker_ml_hwaccel_config_map:
+  # ARM NN (Mali)
+  armnn:
+    devices:
+      - /dev/mali0:/dev/mali0
+    mounts:
+      - type: bind
+        source: /lib/firmware/mali_csffw.bin
+        target: /lib/firmware/mali_csffw.bin
+        read_only: true
+      - type: bind
+        source: /usr/lib/libmali.so
+        target: /usr/lib/libmali.so
+        read_only: true
+
+  # CUDA (NVIDIA GPUs)
+  cuda:
+    device_requests:
+      - driver: nvidia
+        count: 1
+        capabilities:
+          - gpu
+
+  # ROCm (AMD GPUs)
+  rocm:
+    groups:
+      - video
+    devices:
+      - /dev/dri:/dev/dri
+      - /dev/kfd:/dev/kfd
+
+  # OpenVINO (Intel GPUs)
+  openvino:
+    device_cgroup_rules:
+      - 'c 189:* rmw'
+    devices:
+      - /dev/dri:/dev/dri
+    mounts:
+      - type: bind
+        source: /dev/bus/usb
+        target: /dev/bus/usb
+
+  # OpenVINO-WSL (Intel GPUs on WSL2)
+  openvino-wsl:
+    devices:
+      - /dev/dri:/dev/dri
+      - /dev/dxg:/dev/dxg
+    mounts:
+      - type: bind
+        source: /dev/bus/usb
+        target: /dev/bus/usb
+      - type: bind
+        source: /usr/lib/wsl
+        target: /usr/lib/wsl
+
+  # RKNN (Rockchip)
+  rknn:
+    security_opt:
+      - systempaths=unconfined
+      - apparmor=unconfined
+    devices:
+      - /dev/dri:/dev/dri
