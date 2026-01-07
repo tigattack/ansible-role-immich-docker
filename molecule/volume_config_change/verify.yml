@@ -4,12 +4,12 @@
   tasks:
     - name: Get Immich server container info
       community.docker.docker_container_info:
-        name: immich_server
+        name: immich-server
       register: container_info
 
     - name: Get machine learning container info
       community.docker.docker_container_info:
-        name: immich_machine_learning
+        name: immich-machine-learning
       register: ml_container_info
 
     - name: Get Immich storage volume info
@@ -62,12 +62,12 @@
 
     - name: Create test file to verify volume is writable
       ansible.builtin.command:
-        cmd: docker exec immich_server sh -c 'echo "Test writability" > /data/test_write.txt'
+        cmd: docker exec immich-server sh -c 'echo "Test writability" > /data/test_write.txt'
       changed_when: true
 
     - name: Read test file to verify writability
       ansible.builtin.command:
-        cmd: docker exec immich_server cat /data/test_write.txt
+        cmd: docker exec immich-server cat /data/test_write.txt
       register: test_file_content
       changed_when: false
 
@@ -79,12 +79,12 @@
 
     - name: Create test file to verify model cache volume is writable
       ansible.builtin.command:
-        cmd: docker exec immich_machine_learning sh -c 'echo "Test model cache" > /cache/test_write.txt'
+        cmd: docker exec immich-machine-learning sh -c 'echo "Test model cache" > /cache/test_write.txt'
       changed_when: true
 
-    - name: Read test file from model cache to verify writability
+    - name: Read test file to verify model cache writability
       ansible.builtin.command:
-        cmd: docker exec immich_machine_learning cat /cache/test_write.txt
+        cmd: docker exec immich-machine-learning cat /cache/test_write.txt
       register: model_cache_file_content
       changed_when: false
 

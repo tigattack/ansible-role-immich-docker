@@ -30,7 +30,7 @@ See [Example Playbooks](#example-playbooks) below.
 | `immich_docker_container_network` | string | `immich` | ❌ |
 
 **Details:**
-- `immich_docker_container_base_name`: Base name for all Immich containers. Individual containers will be suffixed (e.g., `immich_server`, `immich_postgres`).
+- `immich_docker_container_base_name`: Base name for all Immich containers. Individual containers will be suffixed (e.g., `immich-server`, `immich-postgres`).
 - `immich_docker_containers_state`: The desired state of the Immich containers. For valid options, see the [`state` parameter for the `community.docker.docker_container` module](https://docs.ansible.com/ansible/latest/collections/community/docker/docker_container_module.html#parameter-state).
 - `immich_docker_container_network`: Name of the Docker network to connect the Immich containers to. Note that `bridge`, the default Docker container network, must NOT be used.
 

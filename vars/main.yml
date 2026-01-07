@@ -2,10 +2,10 @@
 
 # region Global Settings
 
-immich_docker_server_container_name: "{{ immich_docker_container_base_name }}_server"
-immich_docker_machine_learning_container_name: "{{ immich_docker_container_base_name }}_machine_learning"
-immich_docker_redis_container_name: "{{ immich_docker_container_base_name }}_redis"
-immich_docker_postgres_container_name: "{{ immich_docker_container_base_name }}_postgres"
+immich_docker_server_container_name: "{{ immich_docker_container_base_name }}-server"
+immich_docker_machine_learning_container_name: "{{ immich_docker_container_base_name }}-machine-learning"
+immich_docker_redis_container_name: "{{ immich_docker_container_base_name }}-redis"
+immich_docker_postgres_container_name: "{{ immich_docker_container_base_name }}-postgres"
 
 # region Storage
 
@@ -71,7 +71,8 @@ immich_docker_server_env: |
       'DB_PASSWORD': immich_docker_db_password,
       'DB_DATABASE_NAME': immich_docker_db_database_name,
       'REDIS_HOSTNAME': immich_docker_redis_container_name,
-      'REDIS_PORT': '6379'
+      'REDIS_PORT': '6379',
+      'IMMICH_MACHINE_LEARNING_URL': 'http://' ~ immich_docker_machine_learning_container_name ~ ':3003',
     } | combine(immich_docker_env_vars)
   }}
 
