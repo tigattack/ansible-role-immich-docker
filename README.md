@@ -153,7 +153,7 @@ immich_docker_storage_volume:
 | `immich_docker_postgres_image` | string | `ghcr.io/immich-app/postgres:{{ immich_docker_postgres_version }}` | ❌ |
 | `immich_docker_db_username` | string | `postgres` | ❌ |
 | `immich_docker_db_database_name` | string | `immich` | ❌ |
-| `immich_docker_db_password` | string | `postgres` | ❌ |
+| `immich_docker_db_password` | string | - | ✅ |
 
 **Details:**
 - `immich_docker_deploy_postgres`: Deploy a PostgreSQL instance for Immich. Set to `false` if using an external PostgreSQL instance.
@@ -162,9 +162,6 @@ immich_docker_storage_volume:
 - `immich_docker_db_username`: PostgreSQL username for Immich.
 - `immich_docker_db_database_name`: PostgreSQL database name for Immich.
 - `immich_docker_db_password`: PostgreSQL password for Immich.
-
-> [!WARNING]
-> You should change `immich_docker_db_password` from the default value.
 
 ### Redis Settings
 
@@ -191,6 +188,8 @@ immich_docker_storage_volume:
   hosts: server
   roles:
     - role: tigattack.immich_docker
+      vars:
+        immich_docker_db_password: your_secure_password_here
 ```
 
 **With a custom storage volume mount:**
@@ -202,6 +201,7 @@ immich_docker_storage_volume:
   roles:
     - role: tigattack.immich_docker
       vars:
+        immich_docker_db_password: your_secure_password_here
         immich_docker_storage_use_docker_volume: true
         immich_docker_storage_volume:
           name: immich_storage
@@ -221,6 +221,7 @@ immich_docker_storage_volume:
   roles:
     - role: tigattack.immich_docker
       vars:
+        immich_docker_db_password: your_secure_password_here
         immich_docker_deploy_postgres: false
         immich_docker_deploy_redis: false
         immich_docker_env_vars:

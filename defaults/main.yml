@@ -88,7 +88,8 @@ immich_docker_postgres_image: "ghcr.io/immich-app/postgres:{{ immich_docker_post
 
 immich_docker_db_username: postgres
 immich_docker_db_database_name: immich
-immich_docker_db_password: postgres
+# Must be set by user
+# immich_docker_db_password:
 
 # region Redis
 

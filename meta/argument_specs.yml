@@ -282,7 +282,7 @@ argument_specs:
 
       immich_docker_db_password:
         type: str
-        default: postgres
+        required: true
         description: PostgreSQL password for Immich.
 
       immich_docker_deploy_redis:
