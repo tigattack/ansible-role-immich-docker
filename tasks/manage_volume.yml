@@ -1,10 +1,10 @@
 ---
 
-- name: "Check if volume would change: {{ volume_item.config.name }}"
+- name: Check if volume would change
   community.docker.docker_volume:
-    name: "{{ volume_item.config.name }}"
-    driver: "{{ volume_item.config.driver }}"
-    driver_options: "{{ volume_item.config.driver_options }}"
+    name: "{{ volume.config.name }}"
+    driver: "{{ volume.config.driver }}"
+    driver_options: "{{ volume.config.driver_options }}"
     recreate: options-changed
     state: present
   register: volume_check
@@ -14,23 +14,23 @@
 - name: Change volume
   when: volume_check is changed # noqa no-handler
   block:
-    - name: "Get container info: {{ volume_item.container_name }}"
+    - name: Get container info
       community.docker.docker_container_info:
-        name: "{{ volume_item.container_name }}"
+        name: "{{ volume.container_name }}"
       register: container_info
 
-    - name: "Remove container: {{ volume_item.container_name }}"
+    - name: Remove container
       community.docker.docker_container:
-        name: "{{ volume_item.container_name }}"
+        name: "{{ volume.container_name }}"
         state: absent
         comparisons:
           '*': ignore
       when: container_info.exists
 
-    - name: "Ensure volume: {{ volume_item.config.name }}"
+    - name: Ensure volume
       community.docker.docker_volume:
-        name: "{{ volume_item.config.name }}"
-        driver: "{{ volume_item.config.driver }}"
-        driver_options: "{{ volume_item.config.driver_options }}"
+        name: "{{ volume.config.name }}"
+        driver: "{{ volume.config.driver }}"
+        driver_options: "{{ volume.config.driver_options }}"
         recreate: options-changed
         state: present
