@@ -134,6 +134,29 @@ immich_docker_data_volume:
     o: addr=nas,username=immich,password=hunter2,dir_mode=0770,file_mode=0660
 ```
 
+#### Volume Change Behavior
+
+> [!IMPORTANT]
+> When a Docker volume configuration changes (e.g., changing driver options for a CIFS mount), **all Immich containers will be stopped and not restarted**. This prevents dependency issues (e.g., app containers trying to connect to a stopped database) and ensures a clean state for data migration.
+
+**What happens during a volume change:**
+1. The affected container is removed and the new volume is created
+2. **All Immich containers are stopped** (server, ML, Redis, PostgreSQL)
+3. A notice is displayed indicating which volumes changed and manual migration is required
+4. All containers remain stopped until the role is run again after migration
+
+**Migration workflow:**
+```bash
+# 1. Run the role - volume change detected, all containers stopped
+ansible-playbook playbook.yml
+
+# 2. Manually migrate data from old volume(s) to new volume(s)
+# (Use docker cp, rsync, or mount volumes directly)
+
+# 3. Run the role again to start all containers
+ansible-playbook playbook.yml
+```
+
 #### Extra Mounts
 
 | Variable | Type | Default | Required |

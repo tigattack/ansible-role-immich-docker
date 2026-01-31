@@ -17,6 +17,34 @@
     loop_var: volume
   when: volume.when
 
+- name: Display volume change migration notice
+  ansible.builtin.debug:
+    msg:
+      - ""
+      - "========================================================================"
+      - "MANUAL DATA MIGRATION REQUIRED"
+      - "========================================================================"
+      - ""
+      - "The following volume(s) have changed configuration:"
+      - "{% for c in immich_docker_containers_awaiting_migration %}  - {{ c.volume_description }} (affects {{ c.description }})\n{% endfor %}"
+      - "All Immich containers will remain stopped to ensure a clean migration."
+      - ""
+      - "NEXT STEPS:"
+      - "  1. Manually migrate data from the old volume(s) to the new volume(s)"
+      - "  2. Run this role again to start all container(s)"
+      - ""
+      - "========================================================================"
+  when: immich_docker_containers_awaiting_migration is defined and immich_docker_containers_awaiting_migration | length > 0
+
+- name: Stop all Immich containers when volume changes detected
+  community.docker.docker_container:
+    name: "{{ item.name }}"
+    state: absent
+    comparisons:
+      '*': ignore
+  loop: "{{ immich_docker_containers }}"
+  when: immich_docker_containers_awaiting_migration is defined and immich_docker_containers_awaiting_migration | length > 0
+
 - name: Create Immich Docker network
   community.docker.docker_network:
     name: "{{ immich_docker_container_network }}"
@@ -42,3 +70,4 @@
   loop_control:
     label: "{{ item.name }}"
     break_when: containers_result is failed
+  when: immich_docker_containers_awaiting_migration is not defined

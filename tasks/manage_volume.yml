@@ -34,3 +34,14 @@
         driver_options: "{{ volume.config.driver_options }}"
         recreate: options-changed
         state: present
+
+    - name: Store affected container
+      ansible.builtin.set_fact:
+        immich_docker_containers_awaiting_migration: >-
+          {{ immich_docker_containers_awaiting_migration | default([]) + [
+            {
+              'name': volume.container_name,
+              'description': volume.container_description,
+              'volume_description': volume.description
+            }
+          ] }}
