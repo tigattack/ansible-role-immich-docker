@@ -104,10 +104,7 @@ jobs:
 
       - run: pip install -r requirements.txt
 
-      - run: |
-          molecule -v converge -s ${{ matrix.test }}
-          molecule -v idempotence -s ${{ matrix.test }}
-          molecule -v verify -s ${{ matrix.test }}
+      - run: molecule -v test -s ${{ matrix.test }}
         env:
           PY_COLORS: '1'
           ANSIBLE_FORCE_COLOR: '1'
