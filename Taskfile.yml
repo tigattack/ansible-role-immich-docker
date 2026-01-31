@@ -1,0 +1,44 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+
+version: '3'
+
+vars:
+  NAMESPACE:
+    sh: yq eval '.galaxy_info.namespace' meta/main.yml
+  ROLE_NAME:
+    sh: yq eval '.galaxy_info.role_name' meta/main.yml
+  ROLE_SYMLINK_DIR: '{{.NAMESPACE}}.{{.ROLE_NAME}}'
+
+tasks:
+  test:
+    desc: Run molecule tests
+    summary: |
+      Run molecule tests for this role.
+      Usage: task test -- <molecule test args>
+      Example (run all tests): task test
+      Example (run named test): task test -- -s default
+    cmds:
+      - task: create-symlink
+      - defer: rm {{.ROLE_SYMLINK_DIR}}
+      - cd {{.ROLE_SYMLINK_DIR}} && molecule test {{.CLI_ARGS}}
+
+  test:destroy:
+    desc: Run molecule cleanup (destroy)
+    summary: |
+      Run molecule destroy for this role.
+      Usage: task test_destroy -- <molecule destroy args>
+      Example (run all destroy): task test_destroy
+      Example (run named destroy): task test_destroy -- -s default
+    cmds:
+      - task: create-symlink
+      - defer: rm {{.ROLE_SYMLINK_DIR}}
+      - cd {{.ROLE_SYMLINK_DIR}} && molecule destroy {{.CLI_ARGS}}
+
+  create-symlink:
+    desc: Create symlinked role directory for molecule tests
+    internal: true
+    status:
+      - test -L {{.ROLE_SYMLINK_DIR}}
+    cmds:
+      - echo "Creating symlinked role directory for test{{":"}} {{.ROLE_SYMLINK_DIR}}"
+      - ln -s "$(pwd)" "{{.ROLE_SYMLINK_DIR}}"
