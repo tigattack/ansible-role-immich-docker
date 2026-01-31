@@ -1,7 +1,7 @@
 # Ansible Role: immich_docker
 
-[![Build Status](https://img.shields.io/github/actions/workflow/status/tigattack/ansible-role-immich/test.yml?branch=main&label=Lint%20%26%20Test)](https://github.com/tigattack/ansible-role-immich/actions?query=workflow:Test)
-[![Ansible Galaxy](https://img.shields.io/ansible/role/d/tigattack/immich)](https://galaxy.ansible.com/ui/standalone/roles/tigattack/immich/)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/tigattack/ansible-role-immich-docker/test.yml?branch=main&label=Lint%20%26%20Test)](https://github.com/tigattack/ansible-role-immich-docker/actions?query=workflow:Test)
+[![Ansible Galaxy](https://img.shields.io/ansible/role/d/tigattack/immich_docker)](https://galaxy.ansible.com/ui/standalone/roles/tigattack/immich_docker/)
 
 Ansible role to deploy [Immich](https://immich.app/) ([GitHub](https://github.com/immich-app/immich)) in Docker.
 
