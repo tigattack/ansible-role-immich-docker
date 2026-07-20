@@ -97,7 +97,7 @@ jobs:
               hashFiles(format('{0}/requirements.yml', needs.role_name.outputs.role_name))
             }}
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.x'
           cache: 'pip'
